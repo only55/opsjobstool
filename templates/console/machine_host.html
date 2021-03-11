@@ -1,0 +1,263 @@
+    {% extends "console/base.html" %}
+
+    {% block index %}
+<style>
+	.table_inf{
+        background: #FFFFFF;
+    }
+    .hide{
+		display: none;
+	}
+	select{
+		border-color: #ced4da;
+	}
+	td input{
+		border:none;
+		
+	}
+</style>
+	<div style="padding: 0 40px;">
+		<div id="toolbar" style="display: flex;margin-top: 20px;">
+		
+		            
+					 <div style="display:flex;">
+						 <button class="btn btn-primary addHost" type="button">新增</button>
+					<button id="import-btn" class="btn btn-default" >
+					    <i class="fa fa-plus"></i>导入
+					</button>
+					
+					<select id="export_select" class="form-control" style="width: 200px;">
+					    <option value="">导出当前</option>
+					    <option value="all">导出所有</option>
+					    <option value="selected">导出选中</option>
+					</select>
+					</div>
+					 <div style="display: flex;align-items: center;">&nbsp;&nbsp;分组：<select id="group" style="width: 150px;"></select></div>
+		  
+		</div>
+		<br/>
+		<h1>分组管理</h1>
+		
+			<table class="table_inf table">
+				<thead>
+			<tr>
+				<th>id</th>
+				<th>分组</th>
+				<th>创建时间</th>
+			    <th>连接</th>
+			    <th>登录IP地址</th>
+			    <th>登录密码</th>
+			    <th>登录端口号</th>
+			    <th>登录用户<th>
+					   <th>操作<th>	
+			</tr>   
+			</thead>
+			     <tbody>
+					
+				 </tbody>
+			</table>
+			<!-- Add Modal -->
+			<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModal" aria-hidden="true">
+			    <div class="modal-dialog modal-dialog-centered" role="document">
+			        <div class="modal-content">
+			            <div class="modal-header">
+			                <h5 class="modal-title" id="addModalTitle">新增</h5>
+			                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			                    <span aria-hidden="true">&times;</span>
+			                </button>
+			            </div>
+			            <div class="modal-body">
+			                <form id="addForm">
+			                    <div class="form-group row ">
+			                        <label for="id" class="col-sm-3 col-form-label">groupname</label>
+			                        <div class="col-sm-9">
+			                            <input type="text"  class="form-control groupName" placeholder="" value="" readonly>
+			                        </div>
+			                    </div>      
+														 <div class="form-group row ">
+														     <label for="id" class="col-sm-3 col-form-label">login IP</label>
+														     <div class="col-sm-9">
+														         <input type="text"  class="form-control ip" Name="name" placeholder="" value="" >
+														     </div>
+														 </div>     
+														 <div class="form-group row ">
+														     <label for="id" class="col-sm-3 col-form-label">login user</label>
+														     <div class="col-sm-9">
+														         <input type="text"  class="form-control user" placeholder="" value="">
+														     </div>
+														 </div>  
+														 <div class="form-group row ">
+														     <label for="id" class="col-sm-3 col-form-label">login password</label>
+														     <div class="col-sm-9">
+														         <input type="password"  class="form-control password" placeholder="" value="">
+														     </div>
+														 </div>      
+														     <div class="form-group row ">
+														         <label for="id" class="col-sm-3 col-form-label">login port</label>
+														         <div class="col-sm-9">
+														             <input type="text"  class="form-control port" placeholder="" value="">
+														         </div>
+														     </div>  
+														 <div class="form-group row ">
+														     <label for="id" class="col-sm-3 col-form-label">connection</label>
+														     <div class="col-sm-9">
+														         <input type="text"  class="form-control connection" placeholder="" value="">
+														     </div>
+														 </div>      
+			                </form>
+			            </div>
+			            <div class="modal-footer">
+			                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+			                <button type="button" id="submitbtn" class="btn btn-primary">提交</button>
+			            </div>
+			        </div>
+			    </div>
+			</div>
+	</div>
+		<script>
+			var host_group = location.href.split("?")[location.href.split("?").length-1].split("=")[location.href.split("?")[location.href.split("?").length-1].split("=").length-1]
+			if(location.href.indexOf("group")==-1){
+				$.ajax({
+				     type: "GET",
+				     url: "/group/name/",
+				     dataType: "json",
+					 async:false,
+				     success: function(data){
+				        if(data.data){
+				            var option = ""
+							if(data.data.length>0){
+								$.each(data.data, function(index, item){
+									 if(index==0){
+										 	host_group = item.name
+									 }
+								    option += "<option value='"+item.name+"'>"+item.name+"</option>"
+								 });
+								$('#group').html(option)
+							}else{
+								alert("还未添加分组信息，请先添加！")
+							}
+				            
+						
+				         }
+				     },
+				     error: function(xhr, ts, e){
+				         console.log("请求表格出错！")
+				         
+				     }
+				 });
+				 $('#group').on("change",function(){
+					 host_group = $('#group').val()
+					 	getInitData()
+				 })
+			}else{
+				$('#group').addClass('hide')
+			
+			}
+			
+			function getInitData(){
+				$.ajax({
+					type: "GET",
+					url: "/host/name/",
+					dataType: "json",
+					data:{
+						host_group:host_group
+					},
+					success: function(data){
+				
+						var data = data.data
+						var tr = ""
+						for(var key in data){
+							var temp = data[key]
+							tr+="<tr><td class='id'>"+temp.id+"</td><td class='groupId'>"+temp.group_id_id+"</td><td>"+new Date(temp.create_time).toLocaleString()+"</td><td>"+temp.connect+"</td>"
+							+"<td class='ip'>"+temp.login_ip+"</td><td><input type='password' class='password' value='"+temp.login_password+"' readonly>"
+							+"</td><td class='port'>"+temp.login_port+"</td><td class='user'>"+temp.login_user+"</td><td class='connect'>"+temp.connect+"</td>"
+							+"<td><a class='update' href='#'>修改</a><a class='delete' href='#'>&nbsp;|&nbsp;删除</a>&nbsp;|&nbsp;测通</td></tr>"
+						}
+						
+						$('tbody').html(tr)
+					}
+				})
+			}
+			getInitData()
+			function clickUpdate(tr){
+				
+				$("#addModal").data('id',tr.find('.id').text())
+			$('#addModal').find(".groupName").val(host_group)
+			$('#addModal').find(".ip").val(tr.find('.ip').text())
+			$('#addModal').find(".user").val(tr.find('.user').text()),
+			$('#addModal').find(".port").val(tr.find('.port').text()),
+			$('#addModal').find(".password").val(tr.find('.password').val()),
+			$('#addModal').find(".connection").val(tr.find('.connect').text()),
+				$("#addModal").modal({
+					backdrop:'static'
+				})
+			}
+			$('table').on("click",'.update',function(){
+				var $tr = $(this).parent().parent()
+				clickUpdate($tr)
+			})
+			$('table').on("click",'.delete',function(){
+				var $tr = $(this).parent().parent()
+				if(confirm('确定删除'+$tr.find('.id').html()+'吗?')) {
+					$.ajax({
+						url:"/host/remove/",
+						 type: "get",
+						 data:{
+							 remove_id:$tr.find('.id').html()
+						 },
+						 success:function(){
+						
+							 getInitData()
+						 },
+						 fail:function(){
+							 
+						 }
+					})
+				}
+			})
+			$('.addHost').on('click',function(){
+				$('#addModal').find(".groupName").val(host_group)
+				$('#addModal').modal({
+					backdrop:'static'
+				})
+			})
+			$('#submitbtn').on('click',function(){
+				var url = "/host/insert/"
+				var param = {
+						group_name:host_group,
+						login_ip:$('#addModal').find(".ip").val(),
+						login_user:$('#addModal').find(".user").val(),
+						login_port:$('#addModal').find(".port").val(),
+						login_password:$('#addModal').find(".password").val(),
+						connect:$('#addModal').find(".connection").val(),
+					}
+				if($('#addModal').data('id')){
+					url = "/host/update"
+					param = {
+						update_id:$('#addModal').data('id'),
+						login_ip:$('#addModal').find(".ip").val(),
+						login_user:$('#addModal').find(".user").val(),
+						login_port:$('#addModal').find(".port").val(),
+						login_password:$('#addModal').find(".password").val(),
+						connection:$('#addModal').find(".connection").val(),
+					}
+				}else{
+					
+				}
+				$.ajax({
+					url:url,
+					type:"get",
+					data:param,
+					success:function(){
+						getInitData()
+						$('#addModal').find(".ip").val("")
+						$('#addModal').find(".user").val("")
+						$('#addModal').find(".port").val("")
+						$('#addModal').find(".password").val("")
+						$('#addModal').find(".connection").val(""),
+						$('#addModal').modal('hide')
+					}
+				})
+			})
+		</script>
+    {% endblock %}

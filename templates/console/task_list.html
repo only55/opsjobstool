@@ -1,0 +1,125 @@
+    {% extends "console/base.html" %}
+
+    {% block index %}
+	<style>
+		.table_inf{
+            background: #FFFFFF;
+        }
+        .flex{
+			display: flex;
+		}
+	</style>
+<div style="padding:40px;">
+	<table class="table_inf table">
+	 <thead>
+		 <tr>
+			 <th>任务编号</th>
+			 <th>任务名</th>
+			  <th>状态</th>
+			   <th>创建时间</th>
+	<th>操作</th>
+	
+		 </tr>
+		 <tbody>
+			 
+		 </tbody>
+	 </thead>
+	</table>
+	<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModal" aria-hidden="true">
+	    <div class="modal-dialog modal-dialog-centered" role="document">
+	        <div class="modal-content">
+	            <div class="modal-header">
+	                <h5 class="modal-title" id="addModalTitle">详情</h5>
+	                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	                    <span aria-hidden="true">&times;</span>
+	                </button>
+	            </div>
+	            <div class="modal-body">
+	               <form class="form-horizontal">
+	                
+	                   <div class="form-group flex">
+	                       <label for="id" class="col-sm-3 control-label">任务id</label>
+	                       <span class="task_id"></span>
+	                   </div>
+	                   <div class="form-group flex">
+	                       <label for="tast_name" class="col-sm-3 control-label">任务名</label>
+	                       <span class="task_name"></span>
+	                   </div>
+	                   <div class="form-group config-wrap">
+	               		
+	                       
+	                   </div>
+	                   
+	               </form>
+	            </div>
+	            
+	        </div>
+	    </div>
+	</div>
+</div>
+<script>
+	var dataList = []
+	$.ajax({
+		url:"/task/info/",
+		type:'get',
+		success:function(data){
+			var list = dataList = data.data
+			var tr = ""
+			for(var i=0;i<list.length;i++){
+				var temp = list[i]
+				var state = temp.state
+				switch(state){
+					case 0:
+					state = "正常";
+					break;
+					case 1:
+					state = "执行中";
+					break;
+					case 2:
+					state = "完成";
+					break;
+					case 3:
+					state = "异常";
+					break;
+					default:
+					state = "正常"
+				}
+				tr+="<tr><td class='id'>"+temp.task_id+"</td><td class='name'>"+temp.task_name+"</td>"
+				+"<td class='state'>"+state+"</td><td class='create_time'>"+temp.create_time+"</td>"
+				+"<td><a class='detail' href='#'>查看详情</a><a class='log' href='#'>&nbsp;|&nbsp;查看日志</a></td></tr>"
+			}
+			$('tbody').html(tr)
+		}
+	})
+	$('tbody').on("click",'.detail',function(e){
+		var tr = $(this).parents("tr")
+		var task_id = tr.find(".id").text()
+		var task_name = tr.find(".name").text()
+		var index = tr.index()
+		var list = dataList[index]
+		var commandList = list.command
+		var html = ""
+		for(var key in commandList){
+			var command = commandList[key][0]
+			var info = command.info
+			var config = ""
+			for(var key1 in info){
+				config+="<div style='padding-right:10px;'><span>"+key1+":</span><span>"+info[key1]+"</span></div>"
+			}
+			html += '<div class="config"><div class="flex">'
+			+'<label  class="col-sm-3 control-label">模块名</label>'
+			+'<span class="module_name">'+command.command_name+'</span></div><div class="module_config flex" style="padding-left: 25%;">'+config+'</div></div>'
+			
+		}
+		$('.config-wrap').html(html)
+		$('#addModal').find(".task_id").text(task_id)
+		$('#addModal').find(".task_name").text(task_name)
+		$('#addModal').modal({
+			backdrop:'static'
+		})
+	})
+	$('tbody').on("click",'.log',function(e){
+		location.href="/event/log/"
+	})
+</script>
+    {% endblock %}

@@ -1,0 +1,269 @@
+{% extends "console/base.html" %}
+{% block index %}
+<style type="text/css">
+    .flex {
+        display: flex;
+    }
+    form{
+        width: 560px;
+        margin: auto;
+        margin-top: 100px;
+        padding: 30px;
+        background: #ffffff;
+    }
+    .title{
+        margin-bottom: 25px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+    }
+    .module_config{
+        flex-wrap: wrap;padding-left: 16.6777%;
+    }
+    .module_config .label{
+        font-size: 14px;
+        margin-top: 10px;
+    }
+    .module_config .item{
+        padding: 10px;
+    }
+    .module_config input{
+            width: 170px;
+    }
+</style>
+<script src="/static/vendor/jquery/jquery.min.js"></script>
+
+<form class="form-horizontal">
+    <div class="title">任务编排</div>
+    <div class="form-group flex">
+        <label for="id" class="col-sm-2 control-label">编号</label>
+        <input type="text" class="form-control" id="id" placeholder="" readonly="">
+    </div>
+    <div class="form-group flex">
+        <label for="tast_name" class="col-sm-2 control-label">任务名</label>
+        <input type="text" class="form-control" id="tast_name" placeholder="">
+    </div>
+        <div class="form-group flex">
+
+			 <label for="group" class="col-sm-2 control-label">组名</label>
+		 <select id="group" style="width: 100%;border:1px solid #ced4da;height:40px;"></select>
+	
+    </div>
+    <div class="form-group config-wrap">
+		<div class="config">
+			<div class="flex">
+				<label  class="col-sm-2 control-label">模块名</label>
+				<select class="form-control module_name" name="module_name"></select>
+				<button class="btn  btn-primary addModule" type="button">增加</button>
+				<button class="btn  btn-default delModule" type="button">删除</button>
+			</div>
+			<div class="module_config flex"></div>
+		</div>
+        
+    </div>
+    <div class="form-group flex">
+		<label  class="col-sm-2 control-label"></label>
+        <div class="col-sm-10">
+            <button type="button" class="btn btn-default reset">重置</button>
+            <button type="button" class="btn btn-primary submit">提交</button>
+        </div>
+    </div>
+</form>
+<!-- <table border="0">
+    <tr>
+        <td colspan="3">任务编排</td>
+    </tr>
+    <tr>
+        <td>编号</td>
+        <td><input type="text" id="serialNo" name="serialNo" value="" readonly="readonly"/></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>任务名</td>
+        <td><input type="text" name="taskName" value=""/></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <table>
+                <tr>
+                    <td>模块名</td>
+                    <td colspan="3">
+                        <select onchange="getParam(this)">
+                            <option value="">默认选项</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td>
+            <button type="button" name="" onclick="addModle(this)">增加</button>
+            <button type="button" name="">删除</button>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="3" align="center">
+              <button type="reset" >重置</button>
+              <button type="button">提交</button>
+        </td>
+    </tr>
+</table> -->
+<script type="text/javascript">
+	$.ajax({
+	     type: "GET",
+	     url: "/group/name/",
+	     dataType: "json",
+		 async:false,
+	     success: function(data){
+	        if(data.data){
+	            var option = ""
+				if(data.data.length>0){
+					$.each(data.data, function(index, item){
+						
+					    option += "<option value='"+item.id+"'>"+item.name+"</option>"
+					 });
+					$('#group').html(option)
+				}else{
+					
+				}
+	            
+			
+	         }
+	     },
+	     error: function(xhr, ts, e){
+	         console.log("请求表格出错！")
+	         
+	     }
+	 });
+var modleNames = {};
+$.ajax({
+    type: "GET",
+    url: "/select/command/?username={{ username }}",
+    dataType: "json",
+    success: function(data) {
+        var mySelect = $(".module_name")
+        document.getElementById("id").value = data.data.task_id
+        modleNames = data.data.command_name
+		let html = ""
+		let keys = []
+        for(var key in modleNames){
+			html+="<option value='"+key+"'>"+key+"</option>"
+			keys.push(key)
+        }
+        mySelect.html(html);
+		
+		mySelect.val(keys[0]).trigger('change')
+    },
+    error: function(xhr, ts, e) {
+        console.log("请求表格字典出错！")
+    }
+});
+$(".config-wrap").on("change",'.module_name',function(e){
+	changeModuleName(e.target)
+})
+$(".config-wrap").on("click",'.addModule',function(e){
+	addModule(e.target)
+})
+$(".config-wrap").on("click",'.delModule',function(e){
+	delModule(e.target)
+})
+function changeModuleName(e){
+	var index = $(e).parents(".config").index()
+	var val = $(e).val()
+	let command = modleNames[val]
+	
+	let str = ""
+	for(var i=0;i<command.length;i++){
+		str += "<div class='item'><span class='label'>"+command[i]+":</span><input type='text' class='form-control'/></div>"
+	}
+	
+	$(".config").eq(index).find('.module_config').html(str)
+}
+
+//增加一个模块
+function addModule(obj) {
+    var button = $(obj);
+    var tr = button.parent();
+	let html = ""
+	let parent = $("")
+
+	let keys=[]
+	for(var key in modleNames){
+		html+="<option value='"+key+"'>"+key+"</option>"
+		keys.push(key)
+	}
+		var mySelect = '<select class="form-control module_name" name="module_name">'+html+'</select>'
+
+
+    var newtr = '<div class="config"><div class="flex"><label class="col-sm-2 control-label">模块名</label>'
+        +mySelect+'<button class="btn  btn-primary addModule" type="button">增加</button>'
+        +'<button class="btn  btn-default delModule" type="button">删除</button></div><div class="module_config flex" style="flex-wrap: wrap;"><label  class="col-sm-2 control-label"></label></div></div>';
+    tr.parent().parent().append(newtr);
+	var len = tr.parent().parent().find(".config").length
+	tr.parent().parent().find(".config").eq(len-1).find('.module_name').val(keys[0]).trigger('change')
+}
+
+function delModule(obj) {
+    var button = $(obj);
+    var tr = button.parent();
+	tr.parent().find(".module_config").remove()
+    tr.remove();
+
+}
+$(".submit").on("click",function(){
+	submit()
+})
+function submit(){
+	
+	let task_id = $("#id").val()
+	let task_name = $('#tast_name').val()
+	let param = {
+		task_id:task_id,
+		task_name:task_name,
+		group_id:$('#group').val(),
+		command_name:[]
+	}
+	let command_list = []
+	let length = $(".config").length
+	let keyValue = ""
+	for(var i=0;i<length;i++){
+		let module_name = ""
+		let module_config = []
+		let obj = {}
+		for(var key in modleNames){
+			if(key==$(".config").eq(i).find(".module_name").val()){
+				module_name = modleNames[key]
+				obj[key] = {}
+				keyValue = key
+			}
+		}
+		if(module_name!=""){
+	
+			for(var j=0;j<module_name.length;j++){
+			
+				obj[keyValue][module_name[j]] = $(".config").eq(i).find(".module_config input").eq(j).val() 
+			}
+		}
+		command_list.push(obj)
+	}
+		param.command_name = command_list
+	console.log("param="+JSON.stringify(param))
+	$.ajax({
+		url:'/accept/task/',
+		type:"post",
+		data:JSON.stringify(param),
+		success:function(){
+		    $('.alert').removeClass('hide').addClass("alert-success").find(".message").html("数据提交成功")
+			setTimeout(function(){
+				$('.alert button').trigger("click")
+			},1000)
+			location.reload()
+		}
+	})
+}
+$('.reset').on('click',reset)
+function reset(){
+	location.reload()
+}
+</script>
+{% endblock %}

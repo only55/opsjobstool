@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>第三标段集中自动化运维工具</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="robots" content="all,follow">
+    <!-- Bootstrap CSS-->
+    <link rel="stylesheet" href="/static/vendor/bootstrap/css/bootstrap.min.css">
+    <!-- Font Awesome CSS-->
+    <link rel="stylesheet" href="/static/vendor/font-awesome/css/font-awesome.min.css">
+    <!-- Fontastic Custom icon font-->
+    <link rel="stylesheet" href="/static/css/fontastic.css">
+    <!-- Google fonts - Poppins -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,700">
+    <!-- theme stylesheet-->
+    <link rel="stylesheet" href="/static/css/style.default.css" id="theme-stylesheet">
+    <!-- Custom stylesheet - for your changes-->
+    <link rel="stylesheet" href="/static/css/custom.css">
+    <!-- Favicon-->
+    <link rel="shortcut icon" href="/static/img/favicon.ico">
+
+    <script src="/static/vendor/jquery/jquery.min.js"></script>
+    <!-- Tweaks for older IEs--><!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+        <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script><![endif]-->
+		<style type="text/css">
+		
+			.hide{
+				display: none;
+			}
+			 
+			
+		</style>
+  </head>
+  <body>
+	  <div class="alert alert-dismissible hide" role="alert">
+		  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		  <div class="message"></div>
+	  </div>
+    <div class="page">
+      <!-- Main Navbar-->
+      <header class="header">
+        <nav class="navbar">
+          <!-- Search Box-->
+          <div class="search-box">
+            <button class="dismiss"><i class="icon-close"></i></button>
+            <form id="searchForm" action="#" role="search">
+              <input type="search" placeholder="请输入查询的关键字..." class="form-control">
+            </form>
+          </div>
+          <div class="container-fluid">
+            <div class="navbar-holder d-flex align-items-center justify-content-between">
+              <!-- Navbar Header-->
+              <div class="navbar-header">
+                <!-- Navbar Brand --><a href="#" class="navbar-brand d-none d-sm-inline-block">
+                  <div class="brand-text d-none d-lg-inline-block"><strong>第三标段集中自动化运维工具</strong></div>
+                  </a>
+                <!-- Toggle Button--><a id="toggle-btn" href="#" class="menu-btn active"><span></span><span></span><span></span></a>
+              </div>
+              <!-- Navbar Menu -->
+              <ul class="nav-menu list-unstyled d-flex flex-md-row align-items-md-center">
+                <!-- Search-->
+                <li class="nav-item d-flex align-items-center"><a id="search" href="#"><i class="icon-search"></i></a></li>
+
+                  <!-- Notifications-->
+                <li class="nav-item dropdown"> <a id="notifications" rel="nofollow" data-target="#" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="nav-link"><i class="fa fa-bell-o"></i><span class="badge bg-red badge-corner">0</span></a>
+                  <ul aria-labelledby="notifications" class="dropdown-menu">
+
+                    <li><a rel="nofollow" href="#" class="dropdown-item"> 
+                        <div class="notification">
+                          <div class="notification-content"><i class="fa fa-envelope bg-green"></i>test </div>
+                          <div class="notification-time"><small>test</small></div>
+                        </div></a></li>
+
+
+                    <li><a rel="nofollow" href="#" class="dropdown-item all-notifications text-center"> <strong>查看所有警告</strong></a></li>
+                  </ul>
+                </li>
+
+                <!-- Logout    -->
+                <li class="nav-item"><a href="/logout/" class="nav-link logout"> <span class="d-none d-sm-inline">退出</span><i class="fa fa-sign-out"></i></a></li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      </header>
+      <div class="page-content d-flex align-items-stretch"> 
+        <!-- Side Navbar -->
+        <nav class="side-navbar">
+          <!-- Sidebar Header-->
+          <div class="sidebar-header d-flex align-items-center">
+            <div class="avatar"><img src="/static/img/avatar-11.jpg" alt="..." class="img-fluid rounded-circle"></div>
+            <div class="title">
+              <h1 class="h4">{{ uname }}</h1>
+              <p>管理员</p>
+            </div>
+          </div>
+          <!-- Sidebar Navidation Menus--><span class="heading">菜单</span>
+          <ul class="list-unstyled">
+
+              {% for key,value in object_result.items %}
+
+                  {% if   value|length  < 4 %}
+
+                      {% if value.2 == "1" %}
+
+                          <li class="active"><a href="/{{ key }}/"> <i class="{{ value.1}}"></i> {{ value.0 }} </a></li>
+
+                          {% else %}
+
+                          <li><a href="/{{ key }}/"> <i class="{{ value.1}}"></i> {{ value.0 }} </a></li>
+
+                      {% endif %}
+
+                  {% else %}
+
+                    <li ><a href="#{{ key }}" aria-expanded="{{ value.4}}" data-toggle="collapse"> <i class="{{ value.1}}"></i>{{ value.0 }} </a>
+                        <ul id="{{ key }}" class="{{ value.5}}">
+
+                          {% for page,active in value.3.items %}
+
+                              {% if active.0 == "1" %}
+
+                                  <li class="active"><a href="/{{ key }}/{{ active.1 }}/">{{ page }}</a></li>
+
+                              {% else %}
+
+                                  <li><a href="/{{ key }}/{{ active.1 }}/">{{ page }}</a></li>
+
+                              {% endif %}
+
+
+
+                          {% endfor %}
+
+
+
+                      </ul>
+                    </li>
+
+                  {% endif %}
+
+
+
+              {% endfor %}
+
+
+          </ul>
+
+        </nav>
+        <div class="content-inner">
+          <!-- Page Header-->
+    {#          <header class="page-header">#}
+    {#            <div class="container-fluid">#}
+    {#              <h2 class="no-margin-bottom"> {{ object_name }} </h2>#}
+    {#            </div>#}
+    {#          </header>#}
+
+          <!-- Dashboard Counts Section-->
+                {% block index %}
+
+
+                {% endblock  %}
+
+          <!-- Page Footer-->
+          <footer class="main-footer">
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col-sm-6">
+                  <p>Ming  &copy; 2018-2019</p>
+                </div>
+                <div class="col-sm-6 text-right">
+                  <p>Design by Bootstrap. </p>
+
+                </div>
+              </div>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </div>
+    <!-- JavaScript files-->
+
+    <script src="/static/vendor/popper.js/umd/popper.min.js"> </script>
+    <script src="/static/vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/vendor/jquery.cookie/jquery.cookie.js"> </script>
+    <script src="/static/vendor/chart.js/Chart.min.js"></script>
+    <script src="/static/vendor/jquery-validation/jquery.validate.min.js"></script>
+    <script src="/static/js/charts-home.js"></script>
+    <!-- Main File-->
+    <script src="/static/js/front.js"></script>
+  </body>
+</html>

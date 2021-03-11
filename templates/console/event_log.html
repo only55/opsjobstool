@@ -1,0 +1,145 @@
+    {% extends "console/base.html" %}
+
+    {% block index %}
+	<style>
+		#addModal textarea{
+			width: 100%;
+			    height: 100px;
+			    border: none;
+		}
+        .table_inf {
+            background: #FFFFFF;
+        }
+	</style>
+      <div style="padding:40px">
+		  <div style="display: flex;margin-top: 20px;align-items: center;">任务：<select class="task" style="width: 150px;"></select></div>
+		  <table class="table_inf table" style="margin-top: 20px;">
+		   <thead>
+		  	 <tr>
+		  		 <th>任务id</th>
+		  		 <th>任务名</th>
+		  		  <th>执行结果</th>
+{#				  <th>details info</th>#}
+		  		   <th>操作</th>
+
+		  
+		  	 </tr>
+		  	 <tbody>
+		  		 
+		  	 </tbody>
+		   </thead>
+		  </table>
+		  <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModal" aria-hidden="true">
+		      <div class="modal-dialog modal-dialog-centered" role="document">
+		          <div class="modal-content">
+		              <div class="modal-header">
+		                  <h5 class="modal-title" id="addModalTitle">详情</h5>
+		                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		                      <span aria-hidden="true">&times;</span>
+		                  </button>
+		              </div>
+		              <div class="modal-body">
+		                 <form class="form-horizontal">
+		                  
+{#		                     <div class="form-group flex">#}
+{#		                         <label for="id" class="col-sm-3 control-label">任务id</label>#}
+{#		                         <span class="task_id"></span>#}
+{#		                     </div>#}
+{#		                     <div class="form-group flex">#}
+{#		                         <label for="tast_name" class="col-sm-3 control-label">任务名</label>#}
+{#		                         <span class="task_name"></span>#}
+{#		                     </div>#}
+{#							 <div class="form-group flex">#}
+{#							     <label for="tast_name" class="col-sm-3 control-label">任务名</label>#}
+{#							     <span class="log"></span>#}
+{#							 </div>#}
+		                     <div class="form-group config-wrap">
+								 <label for="tast_name" class="col-sm-3 control-label">详细信息</label>
+		                 		<textarea readonly="" class="details_info"></textarea>
+
+		                     </div>
+
+		                 </form>
+		              </div>
+		          </div>
+		      </div>
+		  </div>
+	  </div>
+	<script type="text/javascript">
+		var task_name = 0
+		var dataList = []
+		
+		$.ajax({
+			url:"/task/info/",
+			type:'get',
+			async:false,
+			success:function(data){
+				if(data.data){
+				    var option = "<option value='-1'>全部</option>"
+					
+					if(data.data.length>0){
+						$.each(data.data, function(index, item){
+							 
+						    option += "<option value='"+item.task_name+"'>"+item.task_name+"</option>"
+						 });
+						$('.task').html(option)
+						getLogs()
+					}else{
+						alert("还未添加任务信息，请先添加！")
+					}
+				    
+				
+				 }
+			}
+		})
+		$('.task').on('change',function(){
+			task_name = $('.task').val()
+			getLogs()
+		})
+		function getLogs(){
+			var param = {
+					task_name:task_name
+				}
+			if($('.task').val()==-1){
+				param = {
+					
+				}
+			}
+			$.ajax({
+				url:"/event/info",
+				type:'get',
+				data:param,
+				success:function(res){
+					var data = dataList = res.data
+					var tr = ""
+					data.forEach(function(v,k){
+						tr+="<tr><td class='id'>"+v.task_id+"</td><td class='name'>"+v.task_name+"</td><td class='log'>"+v.log+"</td>"
+						+"<td><a href='#' class='detail'>查看详情</a></td></tr>"
+					})
+
+
+						{#+"<td class='details'>"+v.details_info.split(0,10)+"</td><td><a href='#' class='detail'>查看详情</a></td></tr>"#}
+
+
+					$('tbody').html(tr)
+				}
+			})
+		}
+		$('tbody').on('click','.detail',function(){
+			var tr = $(this).parents('tr')
+			var index = tr.index()
+			var task_id = tr.find('.id').text()
+			var task_name = tr.find('.name').text()
+			var log = tr.find('.log').text()
+			var details = dataList[index].details_info
+			$('#addModal').find('.task_id').text(task_id)
+			$('#addModal').find('.task_name').text(task_name)
+			$('#addModal').find('.log').text(log)
+			$('#addModal').find('.details_info').val(details)
+			$('#addModal').modal({
+				backdrop:'static'
+			})
+		})
+	</script>
+
+    {% endblock %}

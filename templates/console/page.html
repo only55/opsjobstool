@@ -1,0 +1,442 @@
+    {% extends "console/base.html" %}
+
+    {% block index %}
+
+        <div style="padding-left: 40px;padding-right: 40px;">
+
+            <!-- bootstrap-table 默认样式表 -->
+            <link rel="stylesheet" href="/static/vendor/bootstrap-table/bootstrap-table.min.css">
+            <!-- 表格导出脚本 -->
+            <script src="https://unpkg.com/tableexport.jquery.plugin/tableExport.min.js"></script>
+            <!-- bootstrap-table 脚本库-->
+            <script src="/static/vendor/bootstrap-table/bootstrap-table.min.js"></script>
+            <!-- bootstrap-table 导出插件 -->
+            <script src="/static/vendor/bootstrap-table/extensions/export/bootstrap-table-export.js"></script>
+            <!-- bootstrap-table 汉化脚本 -->
+            <script src="/static/vendor/bootstrap-table/locale/bootstrap-table-zh-CN.min.js"></script>
+            <style type="text/css">
+                .table_inf{
+                    background: #FFFFFF;
+                }
+                .modify_line,.remove_line
+                {
+                    width:40px;
+                    margin-left: 10px;
+                    padding:0px;
+                }
+                .bs-checkbox input,label{
+                    padding:0;
+                    height:13px;
+                    vertical-align: middle;
+                }
+                .modal{
+                    z-index: 1051;
+                }
+            </style>
+
+            <!-- Add Modal -->
+            <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModal" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addModalTitle">添加数据</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="addForm">
+                                <div class="form-group row ">
+                                    <label for="id" class="col-sm-2 col-form-label">ID</label>
+                                    <div class="col-sm-10">
+                                        <input type="text"  class="form-control" id="id" Name="id" placeholder="id" value="">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="email" class="col-sm-2 col-form-label">Email</label>
+                                    <div class="col-sm-10">
+                                        <input type="text"  class="form-control" id="email" Name="email" placeholder="Email">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="password" class="col-sm-2 col-form-label">Password</label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" id="password" Name="password" placeholder="Password">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                            <button type="button" id="submitbtn" class="btn btn-primary">提交</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- import Modal -->
+            <div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModal" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="importModalTitle">文件导入</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+
+
+                                         <input id="file-Portrait1" type="file">
+
+
+{#                                <div class="ia" >#}
+{#                                  <div class="custom-file">#}
+{#                                    <input type="file" class="custom-file-input" id="inputGroupFile02">#}
+{#                                    <label class="custom-file-label" for="inputGroupFile02">选择文件</label>#}
+{#                                  </div>#}
+{#                                  <div class="input-group-append">#}
+{#                                    <span class="input-group-text" id="">上传</span>#}
+{#                                  </div>#}
+{#                                </div>#}
+
+                            <span id="upload-succ"></span>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                            <button type="button" id="imp-submitbtn" class="btn btn-primary">提交</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- table toolbar -->
+            <div id="toolbar">
+                <div class="btn-group" role="group" aria-label="Basic example">
+                    <button id="add_btn" class="btn btn-primary" >
+                        <i class="fa fa-plus"></i>新增
+                    </button>
+
+                    <button id="import-btn" class="btn btn-primary" >
+                        <i class="fa fa-plus"></i>导入
+                    </button>
+
+                    <select id="export_select" class="form-control">
+                        <option value="">导出当前</option>
+                        <option value="all">导出所有</option>
+                        <option value="selected">导出选中</option>
+                    </select>
+                </div>
+            </div>
+
+            <table id="table_inf"
+                   data-toolbar="#toolbar"
+                   data-search="true"
+                   data-show-toggle="false"
+                   data-show-export="true"
+                   data-minimum-count-columns="2"
+                   data-click-to-select="true"
+                   data-show-toggle="ture"
+                   data-pagination="true"
+                   data-id-field="id"
+                   data-page-list="[10, 25, 50, 100, ALL]"
+                   data-response-handler="responseHandler"
+                   class="table_inf"
+            >
+            </table>
+
+            <script type="text/javascript" >
+                //定义并获取表格节点,全局变量
+                var $table = $('#table_inf');
+                //定义并获取新增按钮节点，全局变量
+                var $addbtn = $('#add_btn');
+
+                var $importbtn = $('#import-btn');
+                //定义数组，缓存表格中选中的ID值
+                var selections = [];
+                //方法：获取表格中选中数据的id,返回一个数组对象
+                function getIdSelections() {
+                    return $.map($table.bootstrapTable('getSelections'), function (row) {
+                        return row.id
+                    })
+                }
+                //方法 responseHandler在表格请求数据完成之后执行，此处用于给数据新增state字段
+                function responseHandler(res) {
+                    console.log("res:",res);
+                    $.each(res.rows, function (i, row) {
+                      row.state = $.inArray(row.id, selections) !== -1
+                    })
+                    console.log("res2:",res);
+                    return res;
+                }
+
+                function operateFormatter(value, row, index) {
+                    return [
+                      '<button class="modify_line btn  btn-warning" onclick="javascript:void(0)" title="修改">',
+                      '<i class="fa fa-pencil"></i>',
+                      '</a>  ',
+                      '<button class="remove_line btn  btn-danger" onclick="javascript:void(0)" title="删除">',
+                      '<i class="fa fa-trash"></i>',
+                      '</a>'
+                    ].join('')
+                }
+
+                window.operateEvents = {
+                    'click .modify_line': function (e, value, row, index) {
+                        //alert('修改行，行数据为: ' + JSON.stringify(row))
+                        console.log("响应修改按钮",row);
+                        addAndModifyModal(row);
+                    },
+                    'click .remove_line': function (e, value, row, index) {
+                        console.log("响应删除按钮",row);
+                        submitDel(row);
+                    }
+                }
+                //初始化表格方法，根据表格字典初始化option后初始化表格
+                function initTable() {
+                    $.ajax({
+                         type: "GET",
+                         url: "/column/",
+                         dataType: "json",
+                         success: function(data){
+                            var exportdatatype =  $("#export_select").val();
+                            var ischeckboxvisible = $("#export_select").val() === 'selected';
+                            var options = {
+                                exportDataType: exportdatatype,
+                                exportTypes: ['json', 'csv'],
+                                showColumns: true,
+                                url: '/info/{{ page_parents }}/',
+                                columns: [{
+                                    field: 'state',
+                                    checkbox: true,
+                                    align: 'center',
+                                    valign: 'middle',
+                                    visible: ischeckboxvisible
+                                }]
+                            };
+                             if(data.data){
+                                 console.log("表格字典：",data);
+                                 $.each(data.data, function(index, item){
+                                    var children = {
+                                        field: item.field_from,
+                                        title: item.field_name,
+                                    }
+                                    options.columns.push(children);
+                                 });
+                                 options.columns.push({
+                                    field: 'operate',
+                                    title: '操作',
+                                    align: 'center',
+                                    width: '140',
+                                    visible: true,
+                                    events: window.operateEvents,
+                                    formatter: operateFormatter
+                                });
+                             }
+                             console.log("options:",options)
+                             $table.bootstrapTable('destroy').bootstrapTable(options);
+                         },
+                         error: function(xhr, ts, e){
+                             console.log("请求表格字典出错！")
+                             var exportdatatype =  $("#export_select").val();
+                             var ischeckboxvisible = $("#export_select").val() === 'selected';
+                             var options = {
+                                 exportDataType: exportdatatype,
+                                 exportTypes: ['json', 'csv'],
+                                 showColumns: true,
+                                url: '/static/data/test-table-data1.json',
+                                 columns: [{
+                                     field: 'state',
+                                     checkbox: true,
+                                     align: 'center',
+                                     valign: 'middle',
+                                     visible: ischeckboxvisible
+                                 }]
+                             };
+
+                             options.columns.push({
+                                field: 'operate',
+                                title: '操作',
+                                align: 'center',
+                                width: '140',
+                                visible: true,
+                                events: window.operateEvents,
+                                formatter: operateFormatter
+                             });
+                             $table.bootstrapTable('destroy').bootstrapTable(options);
+                         }
+                     });
+                 }
+                function addAndModifyModal(rowdata){
+                    var row = rowdata||"";
+                    var abc = "abcdefg";
+                    $.ajax({
+                     type: "GET",
+                     url: "/column/",
+                     dataType: "json",
+                     success: function(data){
+                         if(data.data){
+                             console.log("初始化模态框表单，表格字典：",data);
+                             var $title = $("#addModalTitle");
+                             var $form = $("#addForm");
+                             //清空子元素
+                             $form.empty();
+                             $title.empty();
+                             console.log("abc",abc);
+                             console.log("row",row);
+                             if(row === ""){
+                                 //新增
+                                 $title.append("新增数据");
+                                 $.each(data.data, function(index, item){
+                                     var a = '<div class="form-group row ">'+
+                                                    '<label for="'+item.field_from+'" class="col-sm-2 col-form-label">'+item.field_name+'</label>'+
+                                                    '<div class="col-sm-10">'+
+                                                        '<input type="text"  class="form-control" id="'+item.field_from+'" Name="'+item.field_from+'" placeholder="'+item.field_name+'" value="">'+
+                                                    '</div>'+
+                                                '</div>';
+                                     $form.append(a);
+                                 });
+                             }else{
+                                 //修改
+                                 $title.append("修改数据");
+                                 $.each(data.data, function(index, item){
+                                     var a = '<div class="form-group row ">'+
+                                                    '<label for="'+item.field_from+'" class="col-sm-2 col-form-label">'+item.field_name+'</label>'+
+                                                    '<div class="col-sm-10">'+
+                                                        '<input type="text"  class="form-control" id="'+item.field_from+'" Name="'+item.field_from+'" placeholder="'+item.field_name+'" value="'+(rowdata[item.field_from]===undefined?"":rowdata[item.field_from])+'">'+
+                                                    '</div>'+
+                                                '</div>';
+                                     $form.append(a);
+                                 });
+                             }
+                             $('#addModal').modal('toggle');
+                         }
+                     },
+                     error: function(xhr, ts, e){
+                         console.log("初始化模态框表单，请求表格字典出错！")
+                     }
+                 });
+                }
+                //显示新增或修改的模态框表单
+                $addbtn.click(function(){
+                    addAndModifyModal();
+                });
+                //导入方法
+
+                $importbtn.click(function(){
+
+                             var $title = $("#importModalTitle");
+                             var $form = $("#importForm");
+                             //清空子元素
+
+                             $('#importModal').modal('toggle');
+
+                                            control.file-Portrait1({
+                                            language: 'zh', //设置语言
+                                            uploadUrl: '/upload/', //上传的地址
+                                            allowedFileExtensions : ['jpg', 'png','gif','csv','xlsx'],//接收的文件后缀
+                                            showUpload: true, //是否显示上传按钮
+                                            showCaption: true,//是否显示标题
+                                            browseClass: "btn btn-primary", //按钮样式
+                                            previewFileIcon: "<i class='glyphicon glyphicon-king'></i>",
+                                        });
+
+
+                });
+
+
+                function submitAddAndModify(){
+                    var commandstr = $("#addModalTitle").html();
+                    //序列化表单数据
+                    var newdatas = $("#addForm").serialize();
+                    var url = "/insert/"+"{{ page_parents }}"+"/?"+newdatas;
+                    console.log("insertandmodifyurl",url);
+                    $.ajax({
+                         type: "get",
+                         url: url,
+                         dataType: "json",
+                         success: function(data){
+                             console.log(commandstr+"请求操作返回结果",data)
+                             if(data){
+                                 console.log(commandstr+"成功！");
+                                 //隐藏模态框表单
+                                 $('#addModal').modal('toggle');
+                                 alert(commandstr+"成功");
+                                 initTable();
+                             }
+                         },
+                         error: function(xhr, ts, e){
+                             console.log(commandstr+"出错！")
+                             //$('#addModal').modal('toggle');
+                             alert(commandstr+"失败");
+                         }
+                     });
+                }
+                //提交新增或修改的数据
+                $("#submitbtn").click(
+                    function(){
+                        submitAddAndModify();
+                    }
+                );
+
+                $("#imp-submitbtn").click(
+                    function(){
+                        console.log('enter ')
+
+
+
+                    }
+                );
+
+                function initFileInput(ctrlName, uploadUrl) {
+                var control = $('#' + ctrlName);
+
+
+            }
+                //删除一行数据
+                function submitDel(data){
+                    var datas = data || {};
+                    var temparr = [];
+                    var paramsstr = '';
+                    for(var i in datas){
+                        var key = encodeURIComponent(i);
+                        var value = encodeURIComponent(datas[i]);
+                        temparr.push(key +  '=' + value);
+                    }
+                    paramsstr = temparr.join('&');
+                    var url = "/del/"+"{{ page_parents }}"+"/?"+paramsstr;
+                    console.log("delurl",url);
+                    if (confirm("确定删除吗")==true){
+                         $.ajax({
+                             type: "get",
+                             url: url,
+                             dataType: "json",
+                             success: function(data){
+                                 console.log("删除请求操作返回结果",data)
+                                 if(data){
+                                     console.log("删除数据",datas,"成功！");
+                                     alert("删除数据成功");
+                                     initTable();
+                                 }
+                             },
+                             error: function(xhr, ts, e){
+                                 console.log("删除数据出错！")
+                                 alert("删除失败");
+                             }
+                         });
+                    }
+
+                }
+
+                {#initFileInput("file-Portrait", "/User/EditPortrait");#}
+                //初始化表格及绑定选择变更事件
+                $(function() {
+                    initTable()
+                    $('#export_select').change(initTable).trigger('change');
+
+                })
+
+            </script>
+        </div>
+
+
+    {% endblock %}
